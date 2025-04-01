@@ -1,0 +1,48 @@
+[
+  {
+    "id": "rule_1",
+    "name": "Mark important emails as read",
+    "predicate": "all",
+    "conditions": [
+      {
+        "field": "from",
+        "predicate": "contains",
+        "value": "important@example.com"
+      },
+      {
+        "field": "subject",
+        "predicate": "contains",
+        "value": "Important"
+      }
+    ],
+    "actions": [
+      {
+        "type": "mark_as_read",
+        "value": null
+      }
+    ]
+  },
+  {
+    "id": "rule_2",
+    "name": "Move newsletters to newsletter label",
+    "predicate": "any",
+    "conditions": [
+      {
+        "field": "from",
+        "predicate": "contains",
+        "value": "newsletter"
+      },
+      {
+        "field": "subject",
+        "predicate": "contains",
+        "value": "Newsletter"
+      }
+    ],
+    "actions": [
+      {
+        "type": "move_message",
+        "value": "CATEGORY_PROMOTIONS"
+      }
+    ]
+  }
+]
