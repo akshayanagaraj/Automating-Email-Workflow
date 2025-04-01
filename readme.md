@@ -20,7 +20,7 @@ The Gmail Rules Engine is a Python-based application that automates the process 
 
 1. Clone the repository:
    ```bash
-   git clone [git@github.com:akshayanagaraj/Automating-Email-Workflows.git](https://github.com/akshayanagaraj/Automating-Email-Workflow.git)
+   git clone https://github.com/akshayanagaraj/Automating-Email-Workflow.git
    cd Automating-Email-Workflow
    ```
 2. Create a python virtual env and activate it
