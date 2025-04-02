@@ -1,0 +1,55 @@
+flowchart-diagram
+
+title Email Processing Flowchart
+
+// Nodes and groups
+Start [shape: oval, icon: play]
+Choose Mode [shape: diamond, icon: settings]
+Run Once [icon: clock]
+Schedule and Run [icon: calendar]
+Choose Email Count [icon: mail]
+Store Rules in File [icon: file-text]
+Connect to Gmail [icon: mail, color: red]
+Connect to Database [icon: database, color: blue]
+Fetch Emails [icon: download, color: red]
+Check Email in DB [shape: diamond, icon: database]
+Update Email [icon: refresh]
+Insert Email [icon: plus-square]
+Fetch Rules from File [icon: file-text]
+Bulk Update Rule Execution [icon: upload]
+End [shape: oval, icon: stop]
+Schedule and Run [icon:calendar, icon:clock]
+Process Rules  [icon: filter] {
+  For Each Rule [shape:diamond, icon:repeat]
+  Fetch Emails from DB [icon:database, color:blue]
+  Check Rule Execution [shape: diamond, icon: check-square]
+  Execute Actions [icon: play-circle]
+
+}
+
+// Relationships
+Start > Choose Mode
+Choose Mode > Run Once: Run Once
+Choose Mode > Schedule and Run: Schedule
+Run Once > Choose Email Count
+Choose Email Count > Store Rules in File
+Store Rules in File > Connect to Gmail
+Connect to Gmail > Connect to Database
+Connect to Database > Fetch Emails
+Fetch Emails > Check Email in DB
+Check Email in DB > Update Email: Exists
+Check Email in DB > Insert Email: Not Exists
+Insert Email > Fetch Rules from File
+Update Email > Fetch Rules from File
+Check Rule Execution > Execute Actions: Not Executed
+
+Execute Actions > Bulk Update Rule Execution
+Bulk Update Rule Execution > End
+Choose Mode > Schedule and Run: Schedule
+Schedule and Run > Choose Email Count
+Fetch Rules from File > Process Rules
+Process Rules > For Each Rule
+For Each Rule > Fetch Emails from DB: Satisfies Condition
+Fetch Emails from DB > Check Rule Execution
+
+
