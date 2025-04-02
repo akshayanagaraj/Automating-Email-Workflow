@@ -66,7 +66,7 @@ class RuleEngine:
 
     def process_emails(self, action_handler: Callable) -> int:
         """
-        Process all emails against all rules.
+        Process rules against emails in the database.
 
         Args:
             action_handler: Callable to handle actions
@@ -75,23 +75,30 @@ class RuleEngine:
             Number of emails processed
         """
         processed_count = 0
-
-        # Get all emails from the database
-        emails = self.db_manager.get_emails_for_rule_processing()
-
-        for email in emails:
-            for rule in self.rules:
-                if self._evaluate_rule(email, rule):
-                    # Rule matches, execute actions
-                    actions_taken = self._execute_actions(email, rule, action_handler)
-
-                    # Log rule execution
-                    if actions_taken:
-                        self.db_manager.log_rule_execution(
-                            email.id, rule["id"], actions_taken
-                        )
-                        processed_count += 1
-
+    
+        for rule in self.rules:
+            # Get emails that potentially match this rule's criteria
+            potential_matches = self.db_manager.get_emails_for_rule(rule)
+            
+            # For efficiency, process emails in batches
+            batch_actions = []
+            
+            for email in potential_matches:
+                actions_taken = self._execute_actions(email, rule, action_handler)
+                
+                # If actions were taken, prepare for batch logging
+                if actions_taken:
+                    batch_actions.append({
+                        "email_id": email.id,
+                        "rule_id": rule["id"],
+                        "actions_taken": actions_taken
+                    })
+                    processed_count += 1
+        
+        # Bulk log rule executions if any
+        if batch_actions:
+            self.db_manager.bulk_log_rule_executions(batch_actions)
+    
         return processed_count
 
     def _evaluate_rule(self, email: Email, rule: Dict[str, Any]) -> bool:

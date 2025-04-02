@@ -1,18 +1,18 @@
 [
   {
     "id": "rule_1",
-    "name": "Mark important emails as read",
+    "name": "Mark promotional emails as read",
     "predicate": "all",
     "conditions": [
       {
         "field": "from",
         "predicate": "contains",
-        "value": "important@example.com"
+        "value": "newsletter"
       },
       {
-        "field": "subject",
-        "predicate": "contains",
-        "value": "Important"
+        "field": "received_date",
+        "predicate": "less_than_days",
+        "value": "7"
       }
     ],
     "actions": [
@@ -24,24 +24,42 @@
   },
   {
     "id": "rule_2",
-    "name": "Move newsletters to newsletter label",
+    "name": "Move LinkedIn emails to LiknedIn label",
     "predicate": "any",
     "conditions": [
       {
         "field": "from",
         "predicate": "contains",
-        "value": "newsletter"
+        "value": "LinkedIn"
       },
       {
         "field": "subject",
         "predicate": "contains",
-        "value": "Newsletter"
+        "value": "LinkedIn"
       }
     ],
     "actions": [
       {
         "type": "move_message",
-        "value": "CATEGORY_PROMOTIONS"
+        "value": "LinkedIn"
+      }
+    ]
+  },
+  {
+    "id": "rule_3",
+    "name": "Mark old emails as read",
+    "predicate": "all",
+    "conditions": [
+      {
+        "field": "received_date",
+        "predicate": "less_than_days",
+        "value": "5"
+      }
+    ],
+    "actions": [
+      {
+        "type": "mark_as_read",
+        "value": null
       }
     ]
   }
