@@ -3,7 +3,7 @@
 name = "gmail-rules-engine"
 version = "0.1.0"
 description = "A Python script that integrates with Gmail API and performs rule-based operations on emails"
-authors = ["Your Name <your.email@example.com>"]
+authors = ["Akshaya Nagalakshmi"]
 readme = "README.md"
 
 [tool.poetry.dependencies]

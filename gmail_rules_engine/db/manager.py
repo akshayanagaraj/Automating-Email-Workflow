@@ -193,13 +193,14 @@ class DatabaseManager:
             return []
         finally:
             session.close()
+
     def get_emails_for_rule(self, rule: Dict[str, Any]) -> List[Email]:
         """
         Get emails that potentially match a specific rule.
-        
+
         Args:
             rule: Rule dictionary with conditions
-            
+
         Returns:
             List of Email objects
         """
@@ -207,29 +208,29 @@ class DatabaseManager:
         try:
             # Start with base query including date range filter
             query = session.query(Email)
-            
+
             # Get rule conditions and predicate
             conditions = rule.get("conditions", [])
             predicate = rule.get("predicate", "all").lower()
-            
+
             # Skip if no conditions
             if not conditions:
                 return []
-            
+
             # For "all" predicate, we can apply all conditions to the database query
             # For "any" predicate, we need to use SQLAlchemy's OR operator
             from sqlalchemy import or_, and_
-            
+
             db_conditions = []
-            
+
             for condition in conditions:
                 field = condition.get("field")
                 pred = condition.get("predicate")
                 value = condition.get("value")
-                
+
                 if not field or not pred or value is None:
                     continue
-                    
+
                 # Map field to database column
                 if field == "from":
                     column = Email.from_address
@@ -243,7 +244,7 @@ class DatabaseManager:
                     column = Email.received_date
                 else:
                     continue
-                    
+
                 # Apply appropriate predicate
                 if field == "received_date":
                     if pred == "less_than_days":
@@ -256,35 +257,35 @@ class DatabaseManager:
                         db_conditions.append(Email.received_date < date_threshold)
                     elif pred == "less_than_months":
                         months = int(value)
-                        date_threshold = datetime.now() - timedelta(days=months*30)
+                        date_threshold = datetime.now() - timedelta(days=months * 30)
                         db_conditions.append(Email.received_date > date_threshold)
                     elif pred == "greater_than_months":
                         months = int(value)
-                        date_threshold = datetime.now() - timedelta(days=months*30)
+                        date_threshold = datetime.now() - timedelta(days=months * 30)
                         db_conditions.append(Email.received_date < date_threshold)
                 else:
                     # String predicates
                     if pred == "contains":
-                        db_conditions.append(column.ilike(f'%{value}%'))
+                        db_conditions.append(column.ilike(f"%{value}%"))
                     elif pred == "does_not_contain":
-                        db_conditions.append(~column.ilike(f'%{value}%'))
+                        db_conditions.append(~column.ilike(f"%{value}%"))
                     elif pred == "equals":
                         db_conditions.append(func.lower(column) == func.lower(value))
                     elif pred == "does_not_equal":
                         db_conditions.append(func.lower(column) != func.lower(value))
-            
+
             # Apply conditions based on predicate
             if predicate == "all" and db_conditions:
                 query = query.filter(and_(*db_conditions))
             elif predicate == "any" and db_conditions:
                 query = query.filter(or_(*db_conditions))
-            
+
             # Check if this rule has already been applied to these emails
             subquery = session.query(RuleExecution.email_id).filter(
                 RuleExecution.rule_id == rule["id"]
             )
             query = query.filter(~Email.id.in_(subquery))
-            
+
             print(f"Query: {query.all()}, Rule: {rule}")
             return query.all()
         except SQLAlchemyError as e:
@@ -292,11 +293,11 @@ class DatabaseManager:
             return []
         finally:
             session.close()
-        
+
     def bulk_log_rule_executions(self, batch_executions: List[Dict[str, Any]]):
         """
         Log multiple rule executions in a single transaction.
-        
+
         Args:
             batch_executions: List of execution records
         """
@@ -306,11 +307,11 @@ class DatabaseManager:
                 RuleExecution(
                     email_id=execution["email_id"],
                     rule_id=execution["rule_id"],
-                    actions_taken=execution["actions_taken"]
+                    actions_taken=execution["actions_taken"],
                 )
                 for execution in batch_executions
             ]
-            
+
             session.bulk_save_objects(rule_executions)
             session.commit()
         except SQLAlchemyError as e:
