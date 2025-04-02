@@ -47,12 +47,7 @@ poetry run python -m gmail_rules_engine.main --run-once
 - `--interval` : Interval in minutes to run the job (default: 5).
 - `--log-level` : Logging level (default: `INFO` ).
 - `--run-once` : Run the job once and exit.
-## Test
-Run the following command to test it
 
-```bash
-pytest test/
-```
 
 
 
