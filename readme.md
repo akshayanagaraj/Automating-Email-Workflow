@@ -21,7 +21,9 @@ source env/bin/activate
 3. Install dependencies:pip install -r requirements.txt
 4. Install all packages using poetrypoetry update
 5. Follow the steps in [﻿https://www.geeksforgeeks.org/how-to-read-emails-from-gmail-using-gmail-api-in-python/](https://www.geeksforgeeks.org/how-to-read-emails-from-gmail-using-gmail-api-in-python/)  to create credentials.json file and store here
-6. Create a new database and Set up the `.env`  file with the following variables:GMAIL_CREDENTIALS_PATH=path/to/credentials.json
+6. Create a new database and Set up the `.env`  file with the following variables:
+```bash
+GMAIL_CREDENTIALS_PATH=path/to/credentials.json
 GMAIL_TOKEN_PATH=path/to/token.json
 
 DB_HOST=localhost
@@ -29,6 +31,7 @@ DB_PORT=5432
 DB_NAME=db_name
 DB_USER=user_name
 DB_PASSWORD=password
+```
 ## Usage
 Run the application with the following command:
 
