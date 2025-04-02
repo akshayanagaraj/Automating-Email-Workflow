@@ -285,8 +285,6 @@ class DatabaseManager:
                 RuleExecution.rule_id == rule["id"]
             )
             query = query.filter(~Email.id.in_(subquery))
-
-            print(f"Query: {query.all()}, Rule: {rule}")
             return query.all()
         except SQLAlchemyError as e:
             logger.error(f"Error retrieving emails for rule: {str(e)}")
@@ -317,5 +315,88 @@ class DatabaseManager:
         except SQLAlchemyError as e:
             session.rollback()
             logger.error(f"Error bulk logging rule executions: {str(e)}")
+        finally:
+            session.close()
+
+    def get_existing_emails_by_message_ids(self, message_ids: List[str]) -> List[Email]:
+        """
+        Get existing emails by message IDs.
+
+        Args:
+            message_ids: List of message IDs to check
+
+        Returns:
+            List of existing Email objects
+        """
+        session = self.get_session()
+        try:
+            return session.query(Email).filter(Email.message_id.in_(message_ids)).all()
+        except SQLAlchemyError as e:
+            logger.error(f"Error retrieving existing emails: {str(e)}")
+            return []
+        finally:
+            session.close()
+
+    def bulk_insert_emails(self, email_data_list: List[Dict[str, Any]]) -> bool:
+        """
+        Insert multiple emails in a single transaction.
+
+        Args:
+            email_data_list: List of email data dictionaries
+
+        Returns:
+            True if successful, False otherwise
+        """
+        session = self.get_session()
+        try:
+            emails = [Email(**email_data) for email_data in email_data_list]
+            session.bulk_save_objects(emails)
+            session.commit()
+            return True
+        except SQLAlchemyError as e:
+            session.rollback()
+            logger.error(f"Error bulk inserting emails: {str(e)}")
+            return False
+        finally:
+            session.close()
+
+    def bulk_update_emails(self, email_data_list: List[Dict[str, Any]]) -> bool:
+        """
+        Update multiple emails in a single transaction.
+
+        Args:
+            email_data_list: List of email data dictionaries with message_id keys
+
+        Returns:
+            True if successful, False otherwise
+        """
+        session = self.get_session()
+        try:
+            # Get message IDs
+            message_ids = [email_data["message_id"] for email_data in email_data_list]
+
+            # Get existing emails
+            emails_dict = {
+                email.message_id: email
+                for email in session.query(Email)
+                .filter(Email.message_id.in_(message_ids))
+                .all()
+            }
+
+            # Update each email
+            for email_data in email_data_list:
+                message_id = email_data["message_id"]
+                if message_id in emails_dict:
+                    email = emails_dict[message_id]
+                    for key, value in email_data.items():
+                        if key != "message_id" and hasattr(email, key):
+                            setattr(email, key, value)
+
+            session.commit()
+            return True
+        except SQLAlchemyError as e:
+            session.rollback()
+            logger.error(f"Error bulk updating emails: {str(e)}")
+            return False
         finally:
             session.close()

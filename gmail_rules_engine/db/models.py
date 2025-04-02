@@ -41,6 +41,11 @@ class Email(Base):
 
     rule_executions = relationship("RuleExecution", back_populates="email")
 
+    __table_args__ = (
+        Index("idx_email_search", "from_address", "to_address", "subject"),
+        Index("idx_email_date_labels", "received_date", "labels"),
+    )
+
 
 class RuleExecution(Base):
     __tablename__ = "rule_executions"

@@ -49,46 +49,6 @@ class EmailFetcher:
             logging.error(f"Failed to fetch emails: {e}")
             return []
 
-    def fetch_emails(
-        self, max_results: int = 100, query: str = "", include_body: bool = True
-    ) -> List[Dict[str, Any]]:
-        """
-        Fetch emails from Gmail inbox.
-
-        Args:
-            max_results: Maximum number of emails to fetch
-            query: Gmail search query
-            include_body: Whether to include the email body
-
-        Returns:
-            List of dictionaries containing email data
-        """
-        try:
-            # Get message IDs
-            response = (
-                self.gmail_service.users()
-                .messages()
-                .list(userId="me", q=query, maxResults=max_results)
-                .execute()
-            )
-
-            messages = response.get("messages", [])
-            if not messages:
-                logger.info("No messages found.")
-                return []
-
-            # Fetch full message details
-            emails = []
-            for message in messages:
-                email_data = self._get_email_data(message["id"], include_body)
-                if email_data:
-                    emails.append(email_data)
-
-            return emails
-        except HttpError as error:
-            logger.error(f"An error occurred: {error}")
-            return []
-
     def _get_email_data(
         self, message_id: str, include_body: bool = True
     ) -> Optional[Dict[str, Any]]:

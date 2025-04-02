@@ -35,14 +35,40 @@ def fetch_and_store_emails(
     # Fetch emails
     emails = email_fetcher.fetch_emails(max_results=max_results)
 
-    # Store emails in the database
+    # Process emails in batches for bulk insertion
     stored_count = 0
-    for email_data in emails:
-        email = db_manager.store_email(email_data)
-        if email:
-            stored_count += 1
+    batch_size = 100
+    email_batches = [
+        emails[i : i + batch_size] for i in range(0, len(emails), batch_size)
+    ]
 
-    logging.info(f"Stored {stored_count} emails in the database")
+    for batch in email_batches:
+        # Check which emails already exist to avoid duplicates
+        message_ids = [email_data["message_id"] for email_data in batch]
+        existing_emails = db_manager.get_existing_emails_by_message_ids(message_ids)
+        existing_message_ids = {email.message_id for email in existing_emails}
+
+        # Separate new emails and updates
+        new_emails = []
+        updates = []
+
+        for email_data in batch:
+            if email_data["message_id"] in existing_message_ids:
+                updates.append(email_data)
+            else:
+                new_emails.append(email_data)
+
+        # Bulk insert new emails
+        if new_emails:
+            db_manager.bulk_insert_emails(new_emails)
+            stored_count += len(new_emails)
+
+        # Bulk update existing emails if needed
+        if updates:
+            db_manager.bulk_update_emails(updates)
+            # Don't increment stored_count for updates
+
+    logging.info(f"Stored {stored_count} new emails in the database")
     return stored_count
 
 

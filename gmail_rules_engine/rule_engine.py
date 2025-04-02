@@ -23,33 +23,6 @@ class RuleEngine:
         self.rules_file_path = rules_file_path
         self.rules = self._load_rules()
 
-        # Define predicates
-        self.string_predicates = {
-            "contains": lambda field, value: value.lower() in field.lower(),
-            "does_not_contain": lambda field, value: value.lower() not in field.lower(),
-            "equals": lambda field, value: field.lower() == value.lower(),
-            "does_not_equal": lambda field, value: field.lower() != value.lower(),
-        }
-
-        self.date_predicates = {
-            "less_than_days": lambda date, days: (
-                datetime.now(timezone.utc) - date
-            ).days
-            < int(days),
-            "greater_than_days": lambda date, days: (
-                datetime.now(timezone.utc) - date
-            ).days
-            > int(days),
-            "less_than_months": lambda date, months: (
-                datetime.now(timezone.utc) - date
-            ).days
-            < int(months) * 30,
-            "greater_than_months": lambda date, months: (
-                datetime.now(timezone.utc) - date
-            ).days
-            > int(months) * 30,
-        }
-
     def _load_rules(self) -> List[Dict[str, Any]]:
         """
         Load rules from the JSON file.
@@ -102,98 +75,6 @@ class RuleEngine:
             self.db_manager.bulk_log_rule_executions(batch_actions)
 
         return processed_count
-
-    def _evaluate_rule(self, email: Email, rule: Dict[str, Any]) -> bool:
-        """
-        Evaluate if an email matches a rule.
-
-        Args:
-            email: Email object
-            rule: Rule dictionary
-
-        Returns:
-            True if the email matches the rule, False otherwise
-        """
-        conditions = rule.get("conditions", [])
-        if not conditions:
-            return False
-
-        predicate = rule.get("predicate", "all").lower()
-
-        if predicate == "all":
-            return all(
-                self._evaluate_condition(email, condition) for condition in conditions
-            )
-        elif predicate == "any":
-            return any(
-                self._evaluate_condition(email, condition) for condition in conditions
-            )
-        else:
-            logger.warning(f"Unknown predicate: {predicate}")
-            return False
-
-    def _evaluate_condition(self, email: Email, condition: Dict[str, Any]) -> bool:
-        """
-        Evaluate a single condition against an email.
-
-        Args:
-            email: Email object
-            condition: Condition dictionary
-
-        Returns:
-            True if the condition is met, False otherwise
-        """
-        field = condition.get("field")
-        predicate = condition.get("predicate")
-        value = condition.get("value")
-
-        if not field or not predicate or value is None:
-            return False
-
-        # Get the field value from the email
-        field_value = self._get_field_value(email, field)
-        if field_value is None:
-            return False
-
-        # Apply the appropriate predicate
-        if field == "received_date":
-            predicate_func = self.date_predicates.get(predicate)
-            if predicate_func:
-                return predicate_func(field_value, value)
-        else:
-            predicate_func = self.string_predicates.get(predicate)
-            if predicate_func:
-                return predicate_func(field_value, value)
-
-        logger.warning(f"Unknown predicate: {predicate} for field: {field}")
-        return False
-
-    def _get_field_value(
-        self, email: Email, field: str
-    ) -> Optional[Union[str, datetime]]:
-        """
-        Get the value of a field from an email.
-
-        Args:
-            email: Email object
-            field: Field name
-
-        Returns:
-            Field value or None if not found
-        """
-        if field == "from":
-            return email.from_address
-        elif field == "to":
-            return email.to_address
-        elif field == "subject":
-            return email.subject
-        elif field == "message":
-            return email.body
-        elif field == "received_date":
-            return email.received_date
-        else:
-            logger.warning(f"Unknown field: {field}")
-            return None
 
     def _execute_actions(
         self, email: Email, rule: Dict[str, Any], action_handler: Callable
