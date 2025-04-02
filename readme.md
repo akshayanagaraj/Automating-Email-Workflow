@@ -40,7 +40,7 @@ The Gmail Rules Engine is a Python-based application that automates the process 
 
 5. Follow the steps in https://www.geeksforgeeks.org/how-to-read-emails-from-gmail-using-gmail-api-in-python/ to create credentials.json file and store here
 
-6. Set up the `.env` file with the following variables:
+6. Create a new database and Set up the `.env` file with the following variables:
    ```
    GMAIL_CREDENTIALS_PATH=path/to/credentials.json
    GMAIL_TOKEN_PATH=path/to/token.json
